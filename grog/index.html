@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grog</title>
+  <style type="text/css">
+    .world {
+      width: 480px;
+      height: 480px;
+      position: relative;
+      background-color: gray;
+    }
+
+    .row {
+      overflow: hidden;
+    }
+
+    .tile {
+      float: left;
+      position: relative;
+      width: 8px;
+      height: 8px;
+    }
+
+    .tile-wall {
+      background-color: orange;
+    }
+
+    .tile-broken-wall {
+      background-color: orange;
+      border-radius: 100%;
+    }
+
+    .tile-floor {
+      background-color: gray;
+    }
+
+    .entity {
+      width: 6px;
+      height: 6px;
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      border-radius: 100%;
+    }
+
+    .entity-player {
+      background-color: lime;
+    }
+  </style>
+  <script type="text/javascript">
+  window.addEventListener("DOMContentLoaded", function () {
+    var SIZE = 60;
+    var TILES = {
+      WALL: "wall",
+      BROKEN_WALL: "broken-wall",
+      FLOOR: "floor",
+      HOLE: "wall"
+    }
+
+    var world = {
+      tiles: [],
+      player: {
+        position: {},
+        dir: "y+"
+      },
+      npcs: [],
+      entities: [],
+      position: {
+        x: -1,
+        y: -1
+      }
+    };
+
+    var getTile = function (x, y) {
+      if (world.tiles[x]) {
+        return world.tiles[x][y] || null;
+      }
+
+      return null;
+    }
+
+    var getNeighbours = function (x, y, type, all) {
+      tiles = [
+        getTile(x, y-1),
+        getTile(x-1, y),
+        getTile(x, y+1),
+        getTile(x+1, y),
+      ];
+
+      if (all) {
+        tiles.push(getTile(x-1, y-1));
+        tiles.push(getTile(x-1, y+1));
+        tiles.push(getTile(x+1, y-1));
+        tiles.push(getTile(x+1, y+1));
+      }
+
+      return tiles.filter(function (tile) {
+        return tile && tile.type === type;
+      }).length;
+    }
+
+    var hasNeighbour = function (x, y, type, all) {
+      return getNeighbours(x, y, type) > 0;
+    }
+
+    var setupTiles = function () {
+      var x, y;
+      var tiles = world.tiles;
+      // Create all rows
+      for (var k = 0 ; k < SIZE ; k++) {
+        tiles[k] = [];
+      }
+
+      for (var step = 0 ; step < SIZE / 2 ; step++) {
+        for (x = step ; x < SIZE - step ; x++) {
+          for (y = step ; y < SIZE - step ; y++) {
+            if (x !== step && x !== SIZE - step - 1 && y !== step && y !== SIZE - step - 1) {
+              // Only process the frame/border for each step
+              continue;
+            }
+            if (x === 0 || x === SIZE - 1 || y === 0 || y === SIZE - 1) {
+              tiles[x][y] = {
+                type: TILES.WALL
+              };
+            } else if (hasNeighbour(x, y, TILES.WALL) && Math.random() > 0.5) {
+              tiles[x][y] = {
+                type: TILES.WALL
+              };
+            } else {
+              tiles[x][y] = {
+                type: Math.random() > 0.2 ? TILES.FLOOR : TILES.HOLE
+              }
+            }
+          }
+        }
+      }
+
+      forEachTile(function (tile, x, y) {
+        if (getNeighbours(x, y, TILES.WALL) > 2) {
+          tile.type = TILES.WALL;
+        } else if (getNeighbours(x, y, TILES.HOLE) > 2) {
+          tile.type = TILES.HOLE;
+        }
+
+        if (tile.type === TILES.HOLE && !hasNeighbour(x, y, TILES.HOLE)) {
+          tile.type = TILES.FLOOR;
+        }
+      })
+    };
+
+    var findStartPosition = function () {
+      var searchFrom = function (x0, y0, test) {
+        var step = 0;
+        while((x0 - step > 0 || x0 + step < SIZE) && (y0 - step > 0 || y0 + step < SIZE)) {
+          for (x = x0 - step ; x < x0 + step + 1 ; x++) {
+            for (y = y0 - step ; y < y0 + step + 1 ; y++) {
+              console.log("testing",x,y)
+              if (test(getTile(x, y), x, y)) {
+                return {
+                  x: x,
+                  y: y
+                };
+              }
+            }
+          }
+          step++;
+        }
+      }
+
+      var x0 = SIZE/2 | 0 , y0 = SIZE/2 | 0;
+      return searchFrom(x0, y0, function (tile, x, y) {
+        return tile.type === TILES.FLOOR;
+      })
+    };
+
+    var setup = function () {
+      setupTiles();
+
+      var startPosition = findStartPosition();
+      world.player.position.x = startPosition.x;
+      world.player.position.y = startPosition.y;
+
+      var worldEl = document.createElement("div");
+      worldEl.className = "world";
+      for (var x = 0 ; x < SIZE ; x++) {
+        var rowEl = document.createElement("div");
+        rowEl.className = "row";
+        for (var y = 0 ; y < SIZE ; y++) {
+          var tile = document.createElement("div");
+          tile.setAttribute("x", x);
+          tile.setAttribute("y", y);
+          tile.className = "tile tile-" + world.tiles[x][y].type;
+          world.tiles[x][y].el = tile;
+          rowEl.appendChild(tile);
+        }
+        worldEl.appendChild(rowEl);
+      }
+
+      var playerEl = document.createElement("div");
+      playerEl.className = "entity entity-player";
+      world.player.el = playerEl;
+
+      document.body.appendChild(worldEl);
+
+      window.addEventListener("keydown", onKeydown);
+      window.addEventListener("keyup", onKeyup);
+    };
+
+    var isHandling = false;
+    var onKeydown = function (e) {
+      if (isHandling) {
+        return;
+      }
+
+      // isHandling = true;
+      if (e.key === "ArrowUp") {
+        movePlayer("x", -1);
+      }
+      if (e.key === "ArrowDown") {
+        movePlayer("x", 1);
+      }
+      if (e.key === "ArrowLeft") {
+        movePlayer("y", -1);
+      }
+      if (e.key === "ArrowRight") {
+        movePlayer("y", 1);
+      }
+      if (e.key === " ") {
+        dropDirt();
+      }
+    };
+
+    var movePlayer = function (dir, delta) {
+      var newPosition = {
+        x: world.player.position.x + (dir === "x" ? delta : 0),
+        y: world.player.position.y + (dir === "y" ? delta : 0)
+      };
+
+      var playerDirection = dir === "y" ?
+                            (delta > 0 ? "y+" : "y-") :
+                            (delta > 0 ? "x+" : "x-");
+
+      world.player.dir = playerDirection;
+
+      var tile = getTile(newPosition.x, newPosition.y);
+      if (tile.type === TILES.FLOOR) {
+        world.player.position = newPosition;
+      }
+
+      if (tile.type === TILES.WALL) {
+        tile.type = TILES.BROKEN_WALL;
+        tile.el.className = "tile tile-broken-wall";
+      } else if (tile.type === TILES.BROKEN_WALL) {
+        tile.type = TILES.FLOOR;
+        tile.el.className = "tile tile-floor";
+      }
+    };
+
+    var dropDirt = function () {
+      var x = world.player.position.x;
+      var y = world.player.position.y;
+
+      if (world.player.dir === "x+") {
+        x++;
+      } else if (world.player.dir === "x-") {
+        x--;
+      } else if (world.player.dir === "y+") {
+        y++;
+      } else if (world.player.dir === "y-") {
+        y--;
+      }
+
+      var tile = getTile(x, y);
+
+      if (tile.type === TILES.FLOOR) {
+        tile.type = TILES.BROKEN_WALL;
+        tile.el.className = "tile tile-broken-wall";
+      } else if (tile.type === TILES.BROKEN_WALL) {
+        tile.type = TILES.WALL;
+        tile.el.className = "tile tile-wall";
+      }
+    }
+
+    var onKeyup = function () {
+      isHandling = false;
+    };
+
+    var forEachTile = function (callback) {
+      for (var x = 0 ; x < SIZE ; x++) {
+        for (var y = 0 ; y < SIZE ; y++) {
+          callback(world.tiles[x][y], x, y);
+        }
+      }
+    }
+
+    var draw = function () {
+      // Draw tiles
+      forEachTile(function (tile, x, y) {
+        // Well ...
+      });
+
+      var startTile = getTile(world.player.position.x, world.player.position.y);
+      startTile.el.appendChild(world.player.el);
+
+      for (var i = 0 ; i < world.entities.length ; i++) {
+
+      }
+
+
+    };
+
+    var loop = function () {
+      // console.log("in-loop")
+      requestAnimationFrame(loop);
+      draw();
+    }
+
+    setup();
+    requestAnimationFrame(loop);
+  })
+  </script>
+</head>
+<body>
+
+</body>
+</html>
