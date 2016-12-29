@@ -1,0 +1,84 @@
+body, html {
+  font-family: Arial;
+  margin: 0;
+}
+
+#header {
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 10px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+#header:before {
+  content: "";
+  background-image: url(pizza.jpg);
+  background-position: 30% 20%;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+#header div {
+  flex: 1 auto;
+  display: flex;
+  align-items: center;
+  z-index: 1;
+  text-shadow: 0 0 2px black;
+}
+
+
+.table-header {
+  text-transform: uppercase;
+  text-align: center !important;
+}
+
+.pizza {
+  display: flex;
+  background: #fcc;
+  color: #444;
+}
+
+.name {
+  color: black;
+}
+
+.pizza:nth-child(2n) {
+  background: beige;
+}
+
+.pizza .category {
+  width: 25%;
+}
+
+.pizza .name,
+.pizza .price25,
+.pizza .price30 {
+  width: 10%;
+}
+
+
+.pizza .price25,
+.pizza .price30 {
+  text-align: center;
+}
+
+.pizza .ingredients {
+  width: 45%;
+}
+
+.pizza > div {
+  padding: 5px;
+  border-right: solid 1px white
+}
+
+.pizza > div:last-child {
+  border-right-width: 0;
+}
