@@ -86,7 +86,6 @@ function nextPage() {
   }
 
   window.location.hash = chapterIndex + '-' + index;
-  imageElement.setAttribute('src', url);
 }
 
 function previousPage() {
@@ -110,9 +109,10 @@ function updateSelectedChapter() {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight') {
+  let key = e.key || e.code;
+  if (key === 'ArrowRight') {
     nextPage();
-  } else if (e.key === 'ArrowLeft') {
+  } else if (key === 'ArrowLeft') {
     previousPage();
   }
 });
