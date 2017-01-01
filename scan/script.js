@@ -70,6 +70,8 @@ function onHashChange() {
   let url = manga.getPageUrl(chapterIndex, index);
   imageElement.setAttribute('src', url);
   updateSelectedChapter();
+
+  document.body.scrollTop = 0;
 }
 
 window.addEventListener('hashchange', onHashChange);
