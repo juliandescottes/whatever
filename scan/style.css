@@ -8,6 +8,11 @@ body {
   margin-left: 200px;
 }
 
+#mangas {
+  width: 100%;
+  height: 30px;
+}
+
 #navigation {
   position: fixed;
   top: 0;
@@ -15,12 +20,14 @@ body {
   width: 200px;
   bottom: 0;
 
-  margin: 0;
-  padding: 0;
-
   white-space: nowrap;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+#navigation ul {
+  margin: 0;
+  padding: 0;
 }
 
 #navigation li {
