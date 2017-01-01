@@ -1,0 +1,48 @@
+html, body {
+  position: relative;
+  height: 100%;
+  font-family: Arial;
+}
+
+body {
+  margin-left: 200px;
+}
+
+#navigation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  bottom: 0;
+
+  margin: 0;
+  padding: 0;
+
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#navigation li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#navigation a {
+  text-decoration: none;
+  color: tomato;
+  cursor: pointer;
+  padding: 5px;
+  display: inline-block;
+  width: 100%;
+}
+
+#navigation .selected-chapter {
+  background: tomato;
+  color: white;
+}
+
+img {
+  max-width: 100%;
+}
